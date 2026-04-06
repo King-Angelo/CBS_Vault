@@ -1,0 +1,10 @@
+rules_version = '2';
+// LAB / DEMO ONLY — intentionally weak for coursework pentest narrative.
+// Do not use in production.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /entries/{entryId} {
+      allow read, write: if true;
+    }
+  }
+}

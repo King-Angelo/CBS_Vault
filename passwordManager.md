@@ -71,12 +71,21 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 | Phase | Goal | Outcomes |
 |--------|------|----------|
 | **0 — Scope** | Lock assumptions for the demo | List screens (splash, auth or unlock, vault list, add/edit, settings), Firestore collections/fields, simplest Auth option (or none + open rules—only in lab), release target (Android APK for lab) |
-| **1 — Firebase project** | Backend ready before UI depth | Create Firebase project; register Android app; add `google-services`; enable Firestore + **minimal** Auth; define a **flat data model** if it keeps rules trivial (e.g. one `entries` collection); add **short, permissive Firestore rules** on purpose for the vulnerable storyline |
+| **1 — Firebase project** | Backend ready before UI depth | **Done — see “Phase 1 — Firebase” below.** Project `cbsvault-lab-cbs`; Android `com.cbs.cbsvault`; Firestore + permissive `entries` rules deployed; packages wired; **enable sign-in methods in Console** (Email/Password or Anonymous) before auth UI. |
 | **2 — Flutter foundation** | Runnable app wired to Firebase | Flutter project; Firebase init; routing; theme; environment/config for Firebase options; basic error/loading patterns |
 | **3 — Vault vertical slice** | End-to-end value | Create/read/update/delete (or minimal subset) entries in Firestore from the app; list + detail + add/edit; optional local “master password” UI only if your story needs it |
 | **4 — Polish & packaging** | Looks like a real app | Empty states, validation, copy actions, version string in Settings; **release** build; install on devices for Mark/Lisa scenario |
 | **5 — Optional Dart Frog** | Only if you chose BFF | Dart Frog service deployed or local; Flutter calls your HTTP layer instead of/in addition to SDK; document base URLs |
 | **6 — Pentest alignment** | Report matches the build | Capture screenshots, note APK analysis steps, document discovered identifiers/endpoints and rule weaknesses; map to Recon → Scanning → Access → Maintain |
+
+### Phase 1 — Firebase (implemented)
+
+- **Firebase project:** `cbsvault-lab-cbs` (display name **CBS Vault Lab**). Console: [Firebase project](https://console.firebase.google.com/project/cbsvault-lab-cbs/overview).
+- **Android app:** package **`com.cbs.cbsvault`** registered; `android/app/google-services.json` is present locally (**gitignored**). On a new clone, run `flutterfire configure --project=cbsvault-lab-cbs` (or download the config from the Console).
+- **Flutter packages:** `firebase_core`, `firebase_auth`, `cloud_firestore`. Options: `lib/firebase_options.dart` (FlutterFire). `main.dart` calls `Firebase.initializeApp` before `runApp`.
+- **Firestore:** Native database created; **rules** live in `firestore.rules` (lab-only: open read/write on collection **`entries`** only). Deploy: `firebase deploy --only firestore:rules` (uses `firebase.json` + `.firebaserc`).
+- **Flat data model (target):** collection **`entries`** with document IDs auto-generated; planned fields for Phase 3 (example): `title`, `username`, `secret`, `createdAt`, optional `ownerUid` if you tie rows to Auth users.
+- **Auth (Console step):** In **Authentication → Sign-in method**, enable at least one of **Email/Password** or **Anonymous** before you exercise sign-in from the app (APIs are enabled; providers are toggled in the Console).
 
 ### Flow (high level)
 
