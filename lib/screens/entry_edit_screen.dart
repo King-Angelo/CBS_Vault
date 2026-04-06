@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/entries_repository.dart';
+import '../utils/input_validators.dart';
 import '../widgets/app_snackbar.dart';
 
 /// Add (`entryId` null) or edit existing entry.
@@ -19,6 +20,7 @@ class EntryEditScreen extends StatefulWidget {
 }
 
 class _EntryEditScreenState extends State<EntryEditScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _repo = EntriesRepository();
   final _siteController = TextEditingController();
   final _userController = TextEditingController();
@@ -87,6 +89,8 @@ class _EntryEditScreenState extends State<EntryEditScreen> {
   }
 
   Future<void> _save() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       showAppSnackBar(context, 'Not signed in.', isError: true);
@@ -97,11 +101,6 @@ class _EntryEditScreenState extends State<EntryEditScreen> {
     final user = _userController.text.trim();
     final pass = _passController.text;
     final notes = _notesController.text.trim();
-
-    if (site.isEmpty) {
-      showAppSnackBar(context, 'Site / URL is required.', isError: true);
-      return;
-    }
 
     setState(() => _saving = true);
     try {
@@ -181,66 +180,79 @@ class _EntryEditScreenState extends State<EntryEditScreen> {
           onPressed: () => context.pop(),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          TextField(
-            controller: _siteController,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(labelText: 'Site / URL'),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _userController,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(labelText: 'Username'),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _passController,
-            obscureText: _obscurePass,
-            decoration: InputDecoration(
-              labelText: 'Password',
-              suffixIcon: IconButton(
-                icon: Icon(_obscurePass ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-                onPressed: () => setState(() => _obscurePass = !_obscurePass),
+      body: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            TextFormField(
+              controller: _siteController,
+              textInputAction: TextInputAction.next,
+              validator: InputValidators.siteOrUrl,
+              decoration: const InputDecoration(
+                labelText: 'Site / URL',
+                helperText: 'Site name or full URL',
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _notesController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Notes (optional)',
-              alignLabelWithHint: true,
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _userController,
+              textInputAction: TextInputAction.next,
+              validator: (v) => InputValidators.optionalLength(v, 'Username', 256),
+              decoration: const InputDecoration(
+                labelText: 'Username',
+              ),
             ),
-          ),
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _saving ? null : () => context.pop(),
-                  child: const Text('Cancel'),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _passController,
+              obscureText: _obscurePass,
+              validator: (v) => InputValidators.optionalLength(v, 'Password', 4096),
+              decoration: InputDecoration(
+                labelText: 'Password',
+                suffixIcon: IconButton(
+                  icon: Icon(_obscurePass ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                  onPressed: () => setState(() => _obscurePass = !_obscurePass),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: FilledButton(
-                  onPressed: _saving ? null : _save,
-                  child: _saving
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Save'),
-                ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _notesController,
+              maxLines: 3,
+              validator: (v) => InputValidators.optionalLength(v, 'Notes', 4000),
+              decoration: const InputDecoration(
+                labelText: 'Notes (optional)',
+                alignLabelWithHint: true,
               ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _saving ? null : () => context.pop(),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: _saving ? null : _save,
+                    child: _saving
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Save'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

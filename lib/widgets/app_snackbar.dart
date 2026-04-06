@@ -11,3 +11,8 @@ void showAppSnackBar(BuildContext context, String message, {bool isError = false
     ),
   );
 }
+
+/// Clipboard copy feedback (Phase 4).
+void showCopiedSnackBar(BuildContext context, String itemLabel) {
+  showAppSnackBar(context, '$itemLabel copied to clipboard');
+}

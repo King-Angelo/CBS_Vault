@@ -87,12 +87,7 @@ class _VaultHomeScreenState extends State<VaultHomeScreen> {
                         return _emptyNoEntries(context);
                       }
                       if (filtered.isEmpty) {
-                        return Center(
-                          child: Text(
-                            'No matches for “$q”.',
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                        );
+                        return _emptySearch(context, q);
                       }
                       return ListView.separated(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -118,6 +113,38 @@ class _VaultHomeScreenState extends State<VaultHomeScreen> {
         tooltip: 'Add entry',
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  Widget _emptySearch(BuildContext context, String query) {
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      children: [
+        Center(
+          child: Column(
+            children: [
+              Icon(
+                Icons.search_off_outlined,
+                size: 48,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No matches',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Nothing matches “$query”. Try a different search.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

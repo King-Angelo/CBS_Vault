@@ -48,7 +48,7 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
 
   void _copy(BuildContext context, String label, String value) {
     Clipboard.setData(ClipboardData(text: value));
-    showAppSnackBar(context, '$label copied');
+    showCopiedSnackBar(context, label);
   }
 
   @override

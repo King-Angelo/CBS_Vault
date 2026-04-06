@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -31,17 +32,49 @@ class SettingsScreen extends StatelessWidget {
             leading: const Icon(Icons.info_outline),
             title: const Text('About'),
             subtitle: const Text('Demo only — cybersecurity coursework. Not for production.'),
-            onTap: () => showAppSnackBar(context, 'CBS Vault — authorized lab demo only.'),
+            onTap: () => showAppSnackBar(
+              context,
+              'CBS Vault — authorized lab demo only. Do not use real passwords.',
+            ),
           ),
           const Divider(height: 1),
           FutureBuilder<PackageInfo>(
             future: PackageInfo.fromPlatform(),
             builder: (context, snap) {
-              final v = snap.hasData ? '${snap.data!.version}+${snap.data!.buildNumber}' : '…';
-              return ListTile(
-                leading: const Icon(Icons.tag),
-                title: const Text('Version'),
-                subtitle: Text(v),
+              if (!snap.hasData) {
+                return const ListTile(
+                  leading: Icon(Icons.tag),
+                  title: Text('Version'),
+                  subtitle: Text('…'),
+                );
+              }
+              final p = snap.data!;
+              return Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.apps_outlined),
+                    title: const Text('App'),
+                    subtitle: Text(p.appName),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.tag),
+                    title: const Text('Version'),
+                    subtitle: Text('${p.version} (${p.buildNumber})'),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: Icon(
+                      kDebugMode ? Icons.bug_report_outlined : Icons.verified_outlined,
+                    ),
+                    title: const Text('Build'),
+                    subtitle: Text(
+                      kDebugMode
+                          ? 'Debug — use release APK for demos & pentest report'
+                          : 'Release',
+                    ),
+                  ),
+                ],
               );
             },
           ),
