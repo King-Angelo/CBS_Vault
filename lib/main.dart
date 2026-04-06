@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'app/cbs_vault_app.dart';
 import 'firebase_options.dart';
@@ -9,5 +10,6 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await GoogleSignIn.instance.initialize();
   runApp(const CbsVaultApp());
 }

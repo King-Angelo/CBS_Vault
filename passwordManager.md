@@ -72,7 +72,7 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 |--------|------|----------|
 | **0 — Scope** | Lock assumptions for the demo | List screens (splash, auth or unlock, vault list, add/edit, settings), Firestore collections/fields, simplest Auth option (or none + open rules—only in lab), release target (Android APK for lab) |
 | **1 — Firebase project** | Backend ready before UI depth | **Done — see “Phase 1 — Firebase” below.** Project `cbsvault-lab-cbs`; Android `com.cbs.cbsvault`; Firestore + permissive `entries` rules deployed; packages wired; **enable sign-in methods in Console** (Email/Password or Anonymous) before auth UI. |
-| **2 — Flutter foundation** | Runnable app wired to Firebase | **Done — see “Phase 2 — Flutter foundation” below.** `go_router` + dark Inter theme; all shell screens; anonymous **Unlock** / demo; loading + `SnackBar` errors; Firestore CRUD still Phase 3. |
+| **2 — Flutter foundation** | Runnable app wired to Firebase | **Done — see “Phase 2 — Flutter foundation” below.** `go_router` + dark Inter theme; all shell screens; **email/password** + **Google** sign-in; loading + `SnackBar` errors; Firestore CRUD still Phase 3. |
 | **3 — Vault vertical slice** | End-to-end value | Create/read/update/delete (or minimal subset) entries in Firestore from the app; list + detail + add/edit; optional local “master password” UI only if your story needs it |
 | **4 — Polish & packaging** | Looks like a real app | Empty states, validation, copy actions, version string in Settings; **release** build; install on devices for Mark/Lisa scenario |
 | **5 — Optional Dart Frog** | Only if you chose BFF | Dart Frog service deployed or local; Flutter calls your HTTP layer instead of/in addition to SDK; document base URLs |
@@ -104,7 +104,7 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 - **Theme:** `lib/theme/app_theme.dart` — dark `ColorScheme`, teal primary, `GoogleFonts.interTextTheme`.
 - **Router:** `lib/router/app_router.dart` — auth redirect (signed-in users skip `/login`); `GoRouterRefreshStream` on `FirebaseAuth.instance.authStateChanges()`.
 - **Routes:** `/splash` → `/login` → `/vault`; `/settings`; `/entry/new`; `/entry/:entryId`; `/entry/:entryId/edit`.
-- **Screens:** `lib/screens/` — `SplashScreen`, `LoginScreen` (Firebase **Anonymous** sign-in for **Unlock** / **Use demo account** — enable **Anonymous** in Firebase Console), `VaultHomeScreen` (search UI + empty state + link to preview detail), `EntryDetailScreen` / `EntryEditScreen` (forms + placeholders until Phase 3), `SettingsScreen` (placeholder server URL, About, **Sign out**).
+- **Screens:** `lib/screens/` — `SplashScreen`, `LoginScreen` (**Email/Password** sign-in, **Google** sign-in, **Create account** — enable providers in Firebase Console; add **SHA-1/256** for Android Google sign-in), `VaultHomeScreen` (search UI + empty state + link to preview detail), `EntryDetailScreen` / `EntryEditScreen` (forms + placeholders until Phase 3), `SettingsScreen` (placeholder server URL, About, **Sign out**).
 - **Feedback:** `SnackBar` via `lib/widgets/app_snackbar.dart`; button loading states on login / save.
 
 ### Flow (high level)

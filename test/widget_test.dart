@@ -5,14 +5,14 @@ import 'package:cbsvault/screens/login_screen.dart';
 import 'package:cbsvault/theme/app_theme.dart';
 
 void main() {
-  testWidgets('Login screen shows Unlock and demo link', (tester) async {
+  testWidgets('Login screen shows Sign in and Google', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.dark(),
         home: const LoginScreen(),
       ),
     );
-    expect(find.text('Unlock'), findsOneWidget);
-    expect(find.text('Use demo account'), findsOneWidget);
+    expect(find.text('Sign in'), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
   });
 }
