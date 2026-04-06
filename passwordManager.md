@@ -72,7 +72,7 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 |--------|------|----------|
 | **0 — Scope** | Lock assumptions for the demo | List screens (splash, auth or unlock, vault list, add/edit, settings), Firestore collections/fields, simplest Auth option (or none + open rules—only in lab), release target (Android APK for lab) |
 | **1 — Firebase project** | Backend ready before UI depth | **Done — see “Phase 1 — Firebase” below.** Project `cbsvault-lab-cbs`; Android `com.cbs.cbsvault`; Firestore + permissive `entries` rules deployed; packages wired; **enable sign-in methods in Console** (Email/Password or Anonymous) before auth UI. |
-| **2 — Flutter foundation** | Runnable app wired to Firebase | Flutter project; Firebase init; routing; theme; environment/config for Firebase options; basic error/loading patterns |
+| **2 — Flutter foundation** | Runnable app wired to Firebase | **Target:** `go_router`, dark theme + accent, routes per **Phase 2 — Navigation & UI**; Firebase init done in Phase 1; basic loading/error patterns |
 | **3 — Vault vertical slice** | End-to-end value | Create/read/update/delete (or minimal subset) entries in Firestore from the app; list + detail + add/edit; optional local “master password” UI only if your story needs it |
 | **4 — Polish & packaging** | Looks like a real app | Empty states, validation, copy actions, version string in Settings; **release** build; install on devices for Mark/Lisa scenario |
 | **5 — Optional Dart Frog** | Only if you chose BFF | Dart Frog service deployed or local; Flutter calls your HTTP layer instead of/in addition to SDK; document base URLs |
@@ -86,6 +86,24 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 - **Firestore:** Native database created; **rules** live in `firestore.rules` (lab-only: open read/write on collection **`entries`** only). Deploy: `firebase deploy --only firestore:rules` (uses `firebase.json` + `.firebaserc`).
 - **Flat data model (target):** collection **`entries`** with document IDs auto-generated; planned fields for Phase 3 (example): `title`, `username`, `secret`, `createdAt`, optional `ownerUid` if you tie rows to Auth users.
 - **Auth (Console step):** In **Authentication → Sign-in method**, enable at least one of **Email/Password** or **Anonymous** before you exercise sign-in from the app (APIs are enabled; providers are toggled in the Console).
+
+### Phase 0 — Scope (locked)
+
+- **Screens / routes:** **Splash** → **Login** (unlock / demo) → **Vault home** (search + list) → **Entry detail** (copy / edit / delete) → **Add/Edit entry** (site/URL, username, password, optional notes) → **Settings** (placeholder “Server/API”, About demo-only, version).
+- **Release target:** Android APK (lab), as before.
+
+### Phase 2 — Navigation & UI (target)
+
+- **Routing:** No course mandate. Use **`go_router`** for named routes, nested navigation, and predictable back-stack across Splash → Login → Vault shell → detail / add-edit / settings. Alternatives (Navigator 2, auto_route) are fine; **go_router** is the default for this repo unless you object.
+- **Visual direction:** **Dark mode primary**; **one accent** (teal or blue) for primary actions. Tone: **clean, trustworthy, slightly corporate educational**—not playful. Looks like a **serious consumer password manager** suitable for a legit pentest story.
+- **Typography / layout:** Single column, comfortable spacing, accessible tap targets, **Inter** (or system UI font as Inter fallback). Clear hierarchy; avoid cluttered security jargon on screen.
+- **Splash:** Wordmark **CBS Vault**, tagline **Secure your credentials** (demo).
+- **Login:** Master password or demo “unlock”; primary **Unlock**; optional **Use demo account** link.
+- **Vault home:** Search, rows (site name, masked username, chevron), **+** or FAB; **empty state:** “No entries yet”.
+- **Add/Edit:** Site/URL, Username, Password, optional Notes; **show/hide** password; Save / Cancel.
+- **Entry detail:** Full fields; **Copy username**, **Copy password**, **Edit**, **Delete** (standard icons).
+- **Settings (minimal):** Placeholder **Server / API base URL** row, **About — Demo only**, **version** string.
+- **Feedback:** Simple **error / toast** style when needed (Phase 2 foundation; refine in Phase 4).
 
 ### Flow (high level)
 
