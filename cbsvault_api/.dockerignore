@@ -1,0 +1,5 @@
+.dart_tool/
+build/
+.dart_frog/
+*.md
+!README.md

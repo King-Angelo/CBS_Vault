@@ -75,7 +75,7 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 | **2 — Flutter foundation** | Runnable app wired to Firebase | **Done — see “Phase 2 — Flutter foundation” below.** `go_router` + dark Inter theme; all shell screens; **email/password** + **Google** sign-in; loading + `SnackBar` errors; Firestore CRUD still Phase 3. |
 | **3 — Vault vertical slice** | End-to-end value | **Done — see “Phase 3 — Vault” below.** Full CRUD on `entries` for the signed-in user; list + detail + add/edit + delete + copy; **no** local master-password UI. |
 | **4 — Polish & packaging** | Looks like a real app | **Done — see “Phase 4 — Polish” below.** Validation, empty/search states, copy feedback, Settings version + build mode; **`flutter build apk --release`** verified; install **`app-release.apk`** for Mark/Lisa demos. |
-| **5 — Optional Dart Frog** | Only if you chose BFF | Dart Frog service deployed or local; Flutter calls your HTTP layer instead of/in addition to SDK; document base URLs |
+| **5 — Dart Frog (Render)** | Optional BFF in front of Firebase | **Done — see “Phase 5 — Dart Frog (Render)” below.** Dart Frog API in `cbsvault_api/`; Docker image for **Render**; Flutter Settings stores BFF base URL + **Test connection** (`GET /health`). Vault data remains **Firestore**. |
 | **6 — Pentest alignment** | Report matches the build | Capture screenshots, note APK analysis steps, document discovered identifiers/endpoints and rule weaknesses; map to Recon → Scanning → Access → Maintain |
 
 ### Phase 1 — Firebase (implemented)
@@ -104,7 +104,7 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 - **Theme:** `lib/theme/app_theme.dart` — dark `ColorScheme`, teal primary, `GoogleFonts.interTextTheme`.
 - **Router:** `lib/router/app_router.dart` — auth redirect (signed-in users skip `/login`); `GoRouterRefreshStream` on `FirebaseAuth.instance.authStateChanges()`.
 - **Routes:** `/splash` → `/login` → `/vault`; `/settings`; `/entry/new`; `/entry/:entryId`; `/entry/:entryId/edit`.
-- **Screens:** `lib/screens/` — `SplashScreen`, `LoginScreen` (**Email/Password**, **Google**, **Create account**), `VaultHomeScreen` (Firestore-backed list + search), `EntryDetailScreen` / `EntryEditScreen`, `SettingsScreen` (placeholder server URL, About, **Sign out**).
+- **Screens:** `lib/screens/` — `SplashScreen`, `LoginScreen` (**Email/Password**, **Google**, **Create account**), `VaultHomeScreen` (Firestore-backed list + search), `EntryDetailScreen` / `EntryEditScreen`, `SettingsScreen` (optional BFF base URL + **Test connection** to `GET /health`, placeholder server row, About, **Sign out**).
 - **Feedback:** `SnackBar` via `lib/widgets/app_snackbar.dart`; button loading states on login / save.
 
 ### Phase 3 — Vault (implemented)
@@ -117,6 +117,14 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 - **Copy:** Username and password on detail use the system clipboard (`Clipboard`).
 - **Search:** Client-side filter on `siteUrl`, `username`, `notes`.
 - **Not implemented:** Local “master password” / extra unlock layer (skipped per scope).
+
+### Phase 5 — Dart Frog (Render) (implemented)
+
+- **Service code:** `cbsvault_api/` — Dart Frog app with `GET /` (service metadata), `GET /health`, and `GET /v1/status`. Build locally with `dart_frog build` or run `dart_frog dev`.
+- **Deploy on Render:** Create a **Web Service**, connect your Git repo, set **Root Directory** to `cbsvault_api`, **Environment** **Docker** (uses `cbsvault_api/Dockerfile`). Render sets **`PORT`** automatically; no extra env vars required for the sample routes.
+- **Health check:** In the Render service settings, set the health check path to **`/health`** (or use the default HTTP check against your service URL).
+- **Flutter client:** `lib/services/bff_config.dart` (persisted base URL via `shared_preferences`), `lib/services/bff_client.dart` (`GET /health`). **Settings** → enter the public `https://…onrender.com` URL → **Save URL** → **Test connection** should report success when the BFF is up.
+- **Android:** `INTERNET` permission and `usesCleartextTraffic="true"` in `AndroidManifest.xml` so emulator/device can reach **http** BFFs (e.g. `http://10.0.2.2:8080`) during development; production Render URLs use **https**.
 
 ### Phase 4 — Polish & packaging (implemented)
 

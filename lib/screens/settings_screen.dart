@@ -4,10 +4,73 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../services/bff_client.dart';
+import '../services/bff_config.dart';
 import '../widgets/app_snackbar.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  final _urlController = TextEditingController();
+  bool _loadingPrefs = true;
+  bool _testing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUrl();
+  }
+
+  Future<void> _loadUrl() async {
+    final u = await BffConfig.getBaseUrl();
+    if (mounted) {
+      setState(() {
+        _urlController.text = u ?? '';
+        _loadingPrefs = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveUrl() async {
+    final raw = _urlController.text.trim();
+    await BffConfig.setBaseUrl(raw.isEmpty ? null : raw);
+    if (mounted) {
+      showAppSnackBar(
+        context,
+        raw.isEmpty ? 'BFF URL cleared.' : 'BFF URL saved.',
+      );
+    }
+  }
+
+  Future<void> _testConnection() async {
+    final base = await BffConfig.getBaseUrl();
+    if (!mounted) return;
+    if (base == null || base.isEmpty) {
+      showAppSnackBar(context, 'Enter and save a base URL first.', isError: true);
+      return;
+    }
+    setState(() => _testing = true);
+    final client = BffClient(baseUrl: base);
+    final result = await client.getHealth();
+    if (!mounted) return;
+    setState(() => _testing = false);
+    if (result.ok) {
+      showAppSnackBar(context, 'BFF reachable (GET /health OK).');
+    } else {
+      showAppSnackBar(context, 'BFF check failed: ${result.error}', isError: true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +80,68 @@ class SettingsScreen extends StatelessWidget {
       ),
       body: ListView(
         children: [
+          if (_loadingPrefs)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'BFF base URL',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Optional Dart Frog API (e.g. your Render URL). Firebase vault data is unchanged.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _urlController,
+                    keyboardType: TextInputType.url,
+                    autocorrect: false,
+                    decoration: const InputDecoration(
+                      hintText: 'https://your-service.onrender.com',
+                      prefixIcon: Icon(Icons.link),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      FilledButton(
+                        onPressed: _saveUrl,
+                        child: const Text('Save URL'),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton(
+                        onPressed: _testing ? null : _testConnection,
+                        child: _testing
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Test connection'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+          ],
           ListTile(
             leading: const Icon(Icons.dns_outlined),
-            title: const Text('Server / API base URL'),
+            title: const Text('Server / API (placeholder)'),
             subtitle: Text(
-              'https://api.example.cbsvault.demo (placeholder)',
+              'Legacy row — configure the BFF field above for real HTTP checks.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
                   ),
