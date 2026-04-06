@@ -72,7 +72,7 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 |--------|------|----------|
 | **0 — Scope** | Lock assumptions for the demo | List screens (splash, auth or unlock, vault list, add/edit, settings), Firestore collections/fields, simplest Auth option (or none + open rules—only in lab), release target (Android APK for lab) |
 | **1 — Firebase project** | Backend ready before UI depth | **Done — see “Phase 1 — Firebase” below.** Project `cbsvault-lab-cbs`; Android `com.cbs.cbsvault`; Firestore + permissive `entries` rules deployed; packages wired; **enable sign-in methods in Console** (Email/Password or Anonymous) before auth UI. |
-| **2 — Flutter foundation** | Runnable app wired to Firebase | **Target:** `go_router`, dark theme + accent, routes per **Phase 2 — Navigation & UI**; Firebase init done in Phase 1; basic loading/error patterns |
+| **2 — Flutter foundation** | Runnable app wired to Firebase | **Done — see “Phase 2 — Flutter foundation” below.** `go_router` + dark Inter theme; all shell screens; anonymous **Unlock** / demo; loading + `SnackBar` errors; Firestore CRUD still Phase 3. |
 | **3 — Vault vertical slice** | End-to-end value | Create/read/update/delete (or minimal subset) entries in Firestore from the app; list + detail + add/edit; optional local “master password” UI only if your story needs it |
 | **4 — Polish & packaging** | Looks like a real app | Empty states, validation, copy actions, version string in Settings; **release** build; install on devices for Mark/Lisa scenario |
 | **5 — Optional Dart Frog** | Only if you chose BFF | Dart Frog service deployed or local; Flutter calls your HTTP layer instead of/in addition to SDK; document base URLs |
@@ -92,18 +92,20 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 - **Screens / routes:** **Splash** → **Login** (unlock / demo) → **Vault home** (search + list) → **Entry detail** (copy / edit / delete) → **Add/Edit entry** (site/URL, username, password, optional notes) → **Settings** (placeholder “Server/API”, About demo-only, version).
 - **Release target:** Android APK (lab), as before.
 
-### Phase 2 — Navigation & UI (target)
+### Phase 2 — Navigation & UI (design reference)
 
-- **Routing:** No course mandate. Use **`go_router`** for named routes, nested navigation, and predictable back-stack across Splash → Login → Vault shell → detail / add-edit / settings. Alternatives (Navigator 2, auto_route) are fine; **go_router** is the default for this repo unless you object.
-- **Visual direction:** **Dark mode primary**; **one accent** (teal or blue) for primary actions. Tone: **clean, trustworthy, slightly corporate educational**—not playful. Looks like a **serious consumer password manager** suitable for a legit pentest story.
-- **Typography / layout:** Single column, comfortable spacing, accessible tap targets, **Inter** (or system UI font as Inter fallback). Clear hierarchy; avoid cluttered security jargon on screen.
-- **Splash:** Wordmark **CBS Vault**, tagline **Secure your credentials** (demo).
-- **Login:** Master password or demo “unlock”; primary **Unlock**; optional **Use demo account** link.
-- **Vault home:** Search, rows (site name, masked username, chevron), **+** or FAB; **empty state:** “No entries yet”.
-- **Add/Edit:** Site/URL, Username, Password, optional Notes; **show/hide** password; Save / Cancel.
-- **Entry detail:** Full fields; **Copy username**, **Copy password**, **Edit**, **Delete** (standard icons).
-- **Settings (minimal):** Placeholder **Server / API base URL** row, **About — Demo only**, **version** string.
-- **Feedback:** Simple **error / toast** style when needed (Phase 2 foundation; refine in Phase 4).
+- **Routing:** **`go_router`** — predictable back-stack across Splash → Login → Vault → detail / add-edit / settings.
+- **Visual direction:** **Dark mode primary**; **teal accent**; corporate-educational tone; **Inter** via `google_fonts`.
+- **Splash / Login / Vault / Entry / Settings:** See **Phase 0 — Scope** and original UI brief for copy and layout goals.
+
+### Phase 2 — Flutter foundation (implemented)
+
+- **Packages:** `go_router`, `google_fonts`, `package_info_plus` (version in Settings).
+- **Theme:** `lib/theme/app_theme.dart` — dark `ColorScheme`, teal primary, `GoogleFonts.interTextTheme`.
+- **Router:** `lib/router/app_router.dart` — auth redirect (signed-in users skip `/login`); `GoRouterRefreshStream` on `FirebaseAuth.instance.authStateChanges()`.
+- **Routes:** `/splash` → `/login` → `/vault`; `/settings`; `/entry/new`; `/entry/:entryId`; `/entry/:entryId/edit`.
+- **Screens:** `lib/screens/` — `SplashScreen`, `LoginScreen` (Firebase **Anonymous** sign-in for **Unlock** / **Use demo account** — enable **Anonymous** in Firebase Console), `VaultHomeScreen` (search UI + empty state + link to preview detail), `EntryDetailScreen` / `EntryEditScreen` (forms + placeholders until Phase 3), `SettingsScreen` (placeholder server URL, About, **Sign out**).
+- **Feedback:** `SnackBar` via `lib/widgets/app_snackbar.dart`; button loading states on login / save.
 
 ### Flow (high level)
 
