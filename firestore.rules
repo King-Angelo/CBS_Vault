@@ -6,5 +6,9 @@ service cloud.firestore {
     match /entries/{entryId} {
       allow read, write: if true;
     }
+    // Profile mirror of Firebase Auth — each user may only read/write their own doc.
+    match /Users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }

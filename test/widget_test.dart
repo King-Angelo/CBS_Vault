@@ -5,7 +5,7 @@ import 'package:cbsvault/screens/login_screen.dart';
 import 'package:cbsvault/theme/app_theme.dart';
 
 void main() {
-  testWidgets('Login screen shows Sign in and Google', (tester) async {
+  testWidgets('Login screen shows Sign in and Create account', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.dark(),
@@ -13,6 +13,6 @@ void main() {
       ),
     );
     expect(find.text('Sign in'), findsOneWidget);
-    expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.text('Create account'), findsOneWidget);
   });
 }

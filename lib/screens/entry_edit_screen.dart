@@ -227,19 +227,29 @@ class _EntryEditScreenState extends State<EntryEditScreen> {
                 alignLabelWithHint: true,
               ),
             ),
-            const SizedBox(height: 32),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
+            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  OutlinedButton(
                     onPressed: _saving ? null : () => context.pop(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      minimumSize: const Size(0, 48),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                     child: const Text('Cancel'),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: FilledButton(
+                  const SizedBox(width: 12),
+                  FilledButton(
                     onPressed: _saving ? null : _save,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      minimumSize: const Size(0, 48),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                     child: _saving
                         ? const SizedBox(
                             height: 22,
@@ -248,9 +258,10 @@ class _EntryEditScreenState extends State<EntryEditScreen> {
                           )
                         : const Text('Save'),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+            const SizedBox(height: 24),
           ],
         ),
       ),

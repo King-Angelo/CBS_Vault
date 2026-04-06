@@ -1,6 +1,1 @@
-{
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  }
-}
+{"firestore":{"rules":"firestore.rules","indexes":"firestore.indexes.json"},"flutter":{"platforms":{"android":{"default":{"projectId":"cbsvault-lab-cbs","appId":"1:135634645338:android:98f3e7736d34a4f8350363","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"cbsvault-lab-cbs","configurations":{"android":"1:135634645338:android:98f3e7736d34a4f8350363","web":"1:135634645338:web:1850b52337877e68350363"}}}}}}
