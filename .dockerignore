@@ -1,4 +1,4 @@
-# Used when building with repo root as context (e.g. Dockerfile.render on Render).
+# Repo-root Docker builds (API + Flutter web). Keep lib/ & web/ for Dockerfile.web.
 .git
 .dart_tool
 **/build
@@ -7,8 +7,5 @@ ios
 linux
 macos
 windows
-web
-lib
 /test
 coverage
-.metadata

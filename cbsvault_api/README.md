@@ -18,6 +18,8 @@ CBS Vault **Dart Frog** BFF: JSON metadata, health, and a simple `/v1/status` ro
 5. Optional: **Health Check Path** **`/health`**.
 6. After deploy, copy the service URL into the Flutter app **Settings** → BFF base URL → **Save URL** → **Test connection**.
 
+For the **Flutter web app UI** on Render, create a **separate** Web Service with **Dockerfile Path** `Dockerfile.web` (repo root). See **`passwordManager.md` (Phase 5)**.
+
 ## Routes
 
 | Method | Path | Purpose |

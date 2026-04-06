@@ -1,0 +1,11 @@
+# https://render.com/docs/blueprint-spec
+# Optional: create this service from the dashboard instead (Docker → Dockerfile Path = Dockerfile.web).
+# If you already have a BFF service, keep it; this adds a second service for the Flutter web UI.
+services:
+  - type: web
+    name: cbsvault-web
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile.web
+    healthCheckPath: /

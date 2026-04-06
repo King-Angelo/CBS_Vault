@@ -123,7 +123,9 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 - **Service code:** `cbsvault_api/` — Dart Frog app with `GET /` (service metadata), `GET /health`, and `GET /v1/status`. Build locally with `dart_frog build` or run `dart_frog dev`.
 - **Deploy on Render:** Create a **Web Service**, connect your Git repo, set **Root Directory** to `cbsvault_api`, **Environment** **Docker** (uses `cbsvault_api/Dockerfile`). Render sets **`PORT`** automatically; no extra env vars required for the sample routes.
 - **Health check:** In the Render service settings, set the health check path to **`/health`** (or use the default HTTP check against your service URL).
-- **Flutter client:** `lib/services/bff_config.dart` (persisted base URL via `shared_preferences`), `lib/services/bff_client.dart` (`GET /health`). **Settings** → enter the public `https://…onrender.com` URL → **Save URL** → **Test connection** should report success when the BFF is up.
+- **Flutter web on Render (UI):** Second **Web Service**, **Docker**, **Root Directory** empty, **Dockerfile Path** `Dockerfile.web` — builds with `ghcr.io/cirruslabs/flutter:stable` and serves `build/web` via nginx (see `deploy/render-web/`). Optional: `render.yaml` blueprint. **Firebase Console → Authentication → Settings → Authorized domains:** add your **`<name>.onrender.com`** host so email sign-in works from the deployed URL.
+- **API vs UI:** The Dart Frog URL returns JSON only; the Flutter web service URL is the CBS Vault **UI** (same app as `flutter run -d chrome`).
+- **Flutter client / BFF:** `lib/services/bff_config.dart`, `lib/services/bff_client.dart` — in **Settings**, set the **API** `https://…onrender.com` URL for **Test connection** (`GET /health`).
 - **Android:** `INTERNET` permission and `usesCleartextTraffic="true"` in `AndroidManifest.xml` so emulator/device can reach **http** BFFs (e.g. `http://10.0.2.2:8080`) during development; production Render URLs use **https**.
 
 ### Phase 4 — Polish & packaging (implemented)

@@ -1,0 +1,20 @@
+# CBS Vault Flutter web — build static site, serve with nginx (Render Web Service / Docker).
+# Render: new Web Service → Docker, Root Directory empty, Dockerfile Path = Dockerfile.web
+FROM ghcr.io/cirruslabs/flutter:stable AS build
+WORKDIR /app
+
+COPY pubspec.yaml pubspec.lock ./
+RUN flutter pub get
+
+COPY . .
+
+RUN flutter build web --release
+
+FROM nginx:alpine
+COPY deploy/render-web/nginx.conf.template /nginx.conf.template
+COPY deploy/render-web/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+COPY --from=build /app/build/web /usr/share/nginx/html
+EXPOSE 8080
+ENV PORT=8080
+CMD ["/docker-entrypoint.sh"]
