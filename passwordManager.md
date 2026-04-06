@@ -1,0 +1,97 @@
+Final Project: Obtaining Higher-level Access
+
+## Tech stack
+
+- **Mobile app:** Flutter
+- **Backend / data:** Firebase (Firestore for vault entries; Firebase Auth kept **simple**—e.g. email/password or anonymous auth only if you need a `uid`)
+- **Firestore rules & Auth (lab scope):** **Intentionally minimal, not production-grade.** Use short, easy-to-read rules (e.g. broad `read`/`write` for the demo collection, or a single weak check). Do **not** build complex RLS-style logic—this app is a **deliberately vulnerable** coursework target for a **zero-hour-style** exploit narrative (**authorized lab / demo only**; never deploy this pattern to real users).
+- **API layer (optional):** Dart Frog if you expose HTTP routes in front of Firebase; otherwise the Flutter app may use the Firebase SDK directly
+
+Make a documentation of your Penetration Testing Activity :
+
+1. Reconnaissance: discuss the scope of the penetration test, defining goals, and gathering information about the target system or network.  
+
+2. Scanning: discuss the tools and techniques used to scan the target system or network for vulnerabilities. This includes port scanning, 
+vulnerability scanning, and enumeration to identify potential weaknesses that could be exploited.
+
+3. Gaining Access: discuss the social engineering tactics, or other methods to bypass security controls and gain a foothold within the system.
+
+4. Maintaining Access: discuss how the ethical hacker maintain persistence within the target environment. This may involve escalating privileges, 
+installing backdoors, or creating additional user accounts to ensure continued access to the system.
+
+Scene,Action
+Scene 1,Dev builds and uploads app genuinely (Flutter app configured with Firebase project; simple Auth and permissive Firestore rules for the vulnerable demo)
+Scene 2,Mark and Lisa install and store passwords in the app; data syncs to Firestore under their accounts
+Scene 3,Hacker reverse engineers the APK and recovers Firebase project identifiers API surface (e.g. from embedded config) and/or infers how the app talks to Firestore or HTTP endpoints
+Scene 4,Hacker issues requests (e.g. Firestore REST/SDK-style calls or misused rules) without a valid user password or session and retrieves sensitive data
+Scene 5,Dev has no idea; no patch exists yet (misconfiguration or design issue in Firebase rules or client trust model)
+
+---
+
+## Setup (before Phase 0)
+
+Do these once so Phase 0–1 are not blocked by tooling or accounts.
+
+| Step | What to do | Why it matters |
+|------|------------|----------------|
+| **Machine & OS** | Use a clean dev machine (or VM) you control; note Windows path length issues if the project lives under deep OneDrive folders—short paths reduce Flutter/Android oddities. | Fewer build failures before first run. |
+| **Flutter SDK** | Install stable Flutter; run `flutter doctor` and fix **all** items needed for **Android** (SDK, licenses, at least one emulator or a physical device with USB debugging). | Confirms you can build an APK before Firebase wiring. |
+| **IDE / plugins** | **VS Code or Cursor** (or another Flutter-supported editor) with the **Flutter** and **Dart** extensions. **Do not rely on Android Studio to build or open the app**—use `flutter run` / `flutter build apk` from the terminal or your editor. Android Studio remains optional **only** for installing the Android SDK, SDK Manager, or AVDs if you prefer its UI. | One consistent editor + CLI workflow for the whole project. |
+| **Android package identity** | **Locked:** Android `applicationId` / Kotlin namespace **`com.cbs.cbsvault`** (Dart package name **`cbsvault`**). Do **not** change without updating Firebase app registration and signing. | Firebase Android app and release signing are tied to this id. |
+| **Firebase & Google** | **Manual (browser):** Use a **Google account** you are allowed to use for this course; sign in to [Firebase Console](https://console.firebase.google.com). Prefer **Spark (free)**; use **Blaze** only if the course requires a paid capability. Follow the checklist below—creating the Firebase **project** and registering Android (`com.cbs.cbsvault`) is **Phase 1**, not this row. | Console access + billing stance before you wire the app in Phase 1–2. |
+| **Git / backup** | Initialize a repo (or course-approved host); add a `.gitignore` for Flutter/Android; **do not commit** real `google-services.json` secrets if your school forbids it—use placeholders or private storage per policy. | Recoverable history and safer submission. |
+| **Lab scope & ethics** | Write one paragraph: **authorized** environment only, no real user passwords, fake data, who may run the APK. Align with instructor rules. | Keeps the “vulnerable app” story inside coursework boundaries. |
+| **Test device** | At least one **physical Android phone** *or* a reliable AVD for install and Scene 2–4 testing. | Pentest narrative needs a real install path. |
+| **Optional: Dart Frog** | If you will use it: install Dart SDK and `dart_frog` CLI; confirm `dart --version` matches Flutter’s Dart or use the docs for your version. | Only needed before Phase 5 if that phase is in scope. |
+| **Optional: HTTP proxy** | If your course allows **traffic capture** (Burp/mitmproxy): plan Android cert install / emulator proxy **before** you rely on it in the report. | Scanning section needs tools you can actually run. |
+
+### Firebase & Google (manual checklist)
+
+Complete these in a browser (the editor cannot authenticate for you):
+
+1. **Account** — Use or create a Google account permitted for this coursework.
+2. **Console** — Sign in at [Firebase Console](https://console.firebase.google.com); confirm you can open the dashboard without errors.
+3. **Billing** — For any new Firebase project, stay on **Spark** unless the syllabus requires **Blaze** (e.g. some Cloud Functions or quota scenarios). Firestore + **simple** Auth are available on Spark for development and small demos.
+4. **Later (Phase 1)** — Add a Firebase project, register the Android app with package **`com.cbs.cbsvault`**, download `google-services.json`, enable Firestore and minimal Auth, and set permissive rules per your lab brief.
+
+**Order of operations:** install Flutter → fix `flutter doctor` for Android → **Firebase & Google checklist above** → **then** start **Phase 0** (scope). Do **not** spend time on Firestore rules design until the machine can build and run a blank Flutter app on a device/emulator.
+
+---
+
+## Development roadmap
+
+Use this order so Firebase, the app shell, and your pentest story stay aligned.
+
+### Phases
+
+| Phase | Goal | Outcomes |
+|--------|------|----------|
+| **0 — Scope** | Lock assumptions for the demo | List screens (splash, auth or unlock, vault list, add/edit, settings), Firestore collections/fields, simplest Auth option (or none + open rules—only in lab), release target (Android APK for lab) |
+| **1 — Firebase project** | Backend ready before UI depth | Create Firebase project; register Android app; add `google-services`; enable Firestore + **minimal** Auth; define a **flat data model** if it keeps rules trivial (e.g. one `entries` collection); add **short, permissive Firestore rules** on purpose for the vulnerable storyline |
+| **2 — Flutter foundation** | Runnable app wired to Firebase | Flutter project; Firebase init; routing; theme; environment/config for Firebase options; basic error/loading patterns |
+| **3 — Vault vertical slice** | End-to-end value | Create/read/update/delete (or minimal subset) entries in Firestore from the app; list + detail + add/edit; optional local “master password” UI only if your story needs it |
+| **4 — Polish & packaging** | Looks like a real app | Empty states, validation, copy actions, version string in Settings; **release** build; install on devices for Mark/Lisa scenario |
+| **5 — Optional Dart Frog** | Only if you chose BFF | Dart Frog service deployed or local; Flutter calls your HTTP layer instead of/in addition to SDK; document base URLs |
+| **6 — Pentest alignment** | Report matches the build | Capture screenshots, note APK analysis steps, document discovered identifiers/endpoints and rule weaknesses; map to Recon → Scanning → Access → Maintain |
+
+### Flow (high level)
+
+```mermaid
+flowchart TD
+  A[Phase 0: Scope and screens] --> B[Phase 1: Firebase project and data model]
+  B --> C[Phase 2: Flutter + Firebase init]
+  C --> D[Phase 3: Vault CRUD in app]
+  D --> E[Phase 4: Polish and release APK]
+  E --> F{Need Dart Frog BFF?}
+  F -->|Yes| G[Phase 5: Dart Frog + wire client]
+  F -->|No| H[Phase 6: Pentest documentation]
+  G --> H
+```
+
+### Dependency note
+
+Decide **basic** Auth (sign-in vs anonymous vs none) and **one** Firestore rules file in **Phase 1** so the Flutter client matches—but keep both **simple** on purpose; you are not iterating toward “secure,” you are documenting a **weak** baseline for the lab. The optional Dart Frog layer should be introduced only after the **vertical slice** works with Firebase directly, unless your architecture depends on it from day one.
+
+### After the lab (report)
+
+Briefly contrast the demo with **least privilege**: tight Firestore rules, Auth-required reads/writes, and secrets not recoverable from the APK—so your report shows you understand **mitigation**, not just exploitation.

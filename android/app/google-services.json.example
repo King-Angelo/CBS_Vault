@@ -1,0 +1,19 @@
+{
+  "project_info": {
+    "project_number": "REPLACE_ME",
+    "firebase_url": "https://REPLACE_ME.firebaseio.com",
+    "project_id": "REPLACE_ME",
+    "storage_bucket": "REPLACE_ME.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:REPLACE:android:REPLACE",
+        "android_client_info": {
+          "package_name": "com.cbs.cbsvault"
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
