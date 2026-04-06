@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../data/entries_repository.dart';
 import '../widgets/app_snackbar.dart';
 
 /// Add (`entryId` null) or edit existing entry.
@@ -17,17 +19,62 @@ class EntryEditScreen extends StatefulWidget {
 }
 
 class _EntryEditScreenState extends State<EntryEditScreen> {
+  final _repo = EntriesRepository();
   final _siteController = TextEditingController();
   final _userController = TextEditingController();
   final _passController = TextEditingController();
   final _notesController = TextEditingController();
   bool _obscurePass = true;
   bool _saving = false;
+  bool _loading = true;
+  bool _forbidden = false;
+  bool _notFound = false;
 
   @override
   void initState() {
     super.initState();
-    // Phase 3: load existing when !isNew
+    if (widget.isNew) {
+      _loading = false;
+    } else {
+      _loadEntry();
+    }
+  }
+
+  Future<void> _loadEntry() async {
+    setState(() {
+      _loading = true;
+      _forbidden = false;
+      _notFound = false;
+    });
+    try {
+      final e = await _repo.getEntry(widget.entryId!);
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (!mounted) return;
+      if (e == null) {
+        setState(() {
+          _loading = false;
+          _notFound = true;
+        });
+        return;
+      }
+      if (uid == null || e.ownerUid != uid) {
+        setState(() {
+          _loading = false;
+          _forbidden = true;
+        });
+        return;
+      }
+      _siteController.text = e.siteUrl;
+      _userController.text = e.username;
+      _passController.text = e.secret;
+      _notesController.text = e.notes;
+      setState(() => _loading = false);
+    } catch (err) {
+      if (mounted) {
+        setState(() => _loading = false);
+        showAppSnackBar(context, 'Could not load entry: $err', isError: true);
+      }
+    }
   }
 
   @override
@@ -40,17 +87,91 @@ class _EntryEditScreenState extends State<EntryEditScreen> {
   }
 
   Future<void> _save() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      showAppSnackBar(context, 'Not signed in.', isError: true);
+      return;
+    }
+
+    final site = _siteController.text.trim();
+    final user = _userController.text.trim();
+    final pass = _passController.text;
+    final notes = _notesController.text.trim();
+
+    if (site.isEmpty) {
+      showAppSnackBar(context, 'Site / URL is required.', isError: true);
+      return;
+    }
+
     setState(() => _saving = true);
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    if (!mounted) return;
-    setState(() => _saving = false);
-    showAppSnackBar(context, 'Save will persist to Firestore in Phase 3');
-    if (mounted) context.pop();
+    try {
+      if (widget.isNew) {
+        await _repo.createEntry(
+          siteUrl: site,
+          username: user,
+          secret: pass,
+          notes: notes,
+          ownerUid: uid,
+        );
+      } else {
+        await _repo.updateEntry(
+          entryId: widget.entryId!,
+          siteUrl: site,
+          username: user,
+          secret: pass,
+          notes: notes,
+        );
+      }
+      if (mounted) context.pop();
+    } catch (e) {
+      if (mounted) {
+        showAppSnackBar(context, 'Save failed: $e', isError: true);
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final title = widget.isNew ? 'New entry' : 'Edit entry';
+
+    if (!widget.isNew && _forbidden) {
+      return Scaffold(
+        appBar: AppBar(title: Text(title)),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text('You cannot edit this entry.'),
+          ),
+        ),
+      );
+    }
+
+    if (!widget.isNew && _notFound) {
+      return Scaffold(
+        appBar: AppBar(title: Text(title)),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Entry not found'),
+              TextButton(
+                onPressed: () => context.pop(),
+                child: const Text('Back'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (!widget.isNew && _loading) {
+      return Scaffold(
+        appBar: AppBar(title: Text(title)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(

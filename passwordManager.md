@@ -73,7 +73,7 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 | **0 — Scope** | Lock assumptions for the demo | List screens (splash, auth or unlock, vault list, add/edit, settings), Firestore collections/fields, simplest Auth option (or none + open rules—only in lab), release target (Android APK for lab) |
 | **1 — Firebase project** | Backend ready before UI depth | **Done — see “Phase 1 — Firebase” below.** Project `cbsvault-lab-cbs`; Android `com.cbs.cbsvault`; Firestore + permissive `entries` rules deployed; packages wired; **enable sign-in methods in Console** (Email/Password or Anonymous) before auth UI. |
 | **2 — Flutter foundation** | Runnable app wired to Firebase | **Done — see “Phase 2 — Flutter foundation” below.** `go_router` + dark Inter theme; all shell screens; **email/password** + **Google** sign-in; loading + `SnackBar` errors; Firestore CRUD still Phase 3. |
-| **3 — Vault vertical slice** | End-to-end value | Create/read/update/delete (or minimal subset) entries in Firestore from the app; list + detail + add/edit; optional local “master password” UI only if your story needs it |
+| **3 — Vault vertical slice** | End-to-end value | **Done — see “Phase 3 — Vault” below.** Full CRUD on `entries` for the signed-in user; list + detail + add/edit + delete + copy; **no** local master-password UI. |
 | **4 — Polish & packaging** | Looks like a real app | Empty states, validation, copy actions, version string in Settings; **release** build; install on devices for Mark/Lisa scenario |
 | **5 — Optional Dart Frog** | Only if you chose BFF | Dart Frog service deployed or local; Flutter calls your HTTP layer instead of/in addition to SDK; document base URLs |
 | **6 — Pentest alignment** | Report matches the build | Capture screenshots, note APK analysis steps, document discovered identifiers/endpoints and rule weaknesses; map to Recon → Scanning → Access → Maintain |
@@ -84,7 +84,7 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 - **Android app:** package **`com.cbs.cbsvault`** registered; `android/app/google-services.json` is present locally (**gitignored**). On a new clone, run `flutterfire configure --project=cbsvault-lab-cbs` (or download the config from the Console).
 - **Flutter packages:** `firebase_core`, `firebase_auth`, `cloud_firestore`. Options: `lib/firebase_options.dart` (FlutterFire). `main.dart` calls `Firebase.initializeApp` before `runApp`.
 - **Firestore:** Native database created; **rules** live in `firestore.rules` (lab-only: open read/write on collection **`entries`** only). Deploy: `firebase deploy --only firestore:rules` (uses `firebase.json` + `.firebaserc`).
-- **Flat data model (target):** collection **`entries`** with document IDs auto-generated; planned fields for Phase 3 (example): `title`, `username`, `secret`, `createdAt`, optional `ownerUid` if you tie rows to Auth users.
+- **Flat data model:** collection **`entries`** — fields `siteUrl`, `username`, `secret`, `notes`, `createdAt`, `ownerUid` (see **Phase 3 — Vault**).
 - **Auth (Console step):** In **Authentication → Sign-in method**, enable at least one of **Email/Password** or **Anonymous** before you exercise sign-in from the app (APIs are enabled; providers are toggled in the Console).
 
 ### Phase 0 — Scope (locked)
@@ -104,8 +104,19 @@ Use this order so Firebase, the app shell, and your pentest story stay aligned.
 - **Theme:** `lib/theme/app_theme.dart` — dark `ColorScheme`, teal primary, `GoogleFonts.interTextTheme`.
 - **Router:** `lib/router/app_router.dart` — auth redirect (signed-in users skip `/login`); `GoRouterRefreshStream` on `FirebaseAuth.instance.authStateChanges()`.
 - **Routes:** `/splash` → `/login` → `/vault`; `/settings`; `/entry/new`; `/entry/:entryId`; `/entry/:entryId/edit`.
-- **Screens:** `lib/screens/` — `SplashScreen`, `LoginScreen` (**Email/Password** sign-in, **Google** sign-in, **Create account** — enable providers in Firebase Console; add **SHA-1/256** for Android Google sign-in), `VaultHomeScreen` (search UI + empty state + link to preview detail), `EntryDetailScreen` / `EntryEditScreen` (forms + placeholders until Phase 3), `SettingsScreen` (placeholder server URL, About, **Sign out**).
+- **Screens:** `lib/screens/` — `SplashScreen`, `LoginScreen` (**Email/Password**, **Google**, **Create account**), `VaultHomeScreen` (Firestore-backed list + search), `EntryDetailScreen` / `EntryEditScreen`, `SettingsScreen` (placeholder server URL, About, **Sign out**).
 - **Feedback:** `SnackBar` via `lib/widgets/app_snackbar.dart`; button loading states on login / save.
+
+### Phase 3 — Vault (implemented)
+
+- **Repository / model:** `lib/data/entries_repository.dart`, `lib/models/vault_entry.dart` — queries `entries` where `ownerUid` matches the current Firebase user; sort by `createdAt` in app (newest first).
+- **Create:** FAB or `/entry/new` → **Save** writes a new document with `FieldValue.serverTimestamp()` for `createdAt`.
+- **Read:** Vault list (live stream); detail screen streams a single document by id.
+- **Update:** Edit route loads existing fields; **Save** calls `update`.
+- **Delete:** Detail app bar → confirm dialog → `delete` → navigate to `/vault`.
+- **Copy:** Username and password on detail use the system clipboard (`Clipboard`).
+- **Search:** Client-side filter on `siteUrl`, `username`, `notes`.
+- **Not implemented:** Local “master password” / extra unlock layer (skipped per scope).
 
 ### Flow (high level)
 
