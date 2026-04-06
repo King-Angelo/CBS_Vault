@@ -1,0 +1,29 @@
+# Docker build context = repository root (Render: Root Directory empty, Dockerfile Path = Dockerfile.render).
+# Same runtime image as cbsvault_api/Dockerfile; paths prefixed so COPY finds cbsvault_api/*.
+FROM dart:stable AS build
+WORKDIR /app
+
+RUN dart pub global activate dart_frog_cli
+ENV PATH="/root/.pub-cache/bin:${PATH}"
+
+COPY cbsvault_api/pubspec.yaml ./
+COPY cbsvault_api/analysis_options.yaml ./analysis_options.yaml
+COPY cbsvault_api/routes ./routes
+COPY cbsvault_api/test ./test
+
+RUN dart pub get
+RUN dart_frog build
+RUN dart compile exe build/bin/server.dart -o /runtime/cbsvault_api
+
+FROM debian:bookworm-slim
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/* \
+  && useradd -r -s /usr/sbin/nologin appuser
+
+COPY --from=build /runtime/cbsvault_api /usr/local/bin/cbsvault_api
+
+ENV PORT=8080
+EXPOSE 8080
+USER appuser
+CMD ["/usr/local/bin/cbsvault_api"]

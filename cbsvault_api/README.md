@@ -11,10 +11,12 @@ CBS Vault **Dart Frog** BFF: JSON metadata, health, and a simple `/v1/status` ro
 
 1. Push the repo (including `cbsvault_api/`) to GitHub/GitLab/Bitbucket.
 2. In [Render](https://render.com), **New** → **Web Service** → connect the repo.
-3. Set **Root Directory** to `cbsvault_api`.
-4. **Environment:** **Docker** (build uses `Dockerfile` in this folder). Render injects **`PORT`**; the container listens on that port.
-5. Optional: set **Health Check Path** to **`/health`**.
-6. After deploy, copy the service URL (e.g. `https://your-service.onrender.com`) into the Flutter app **Settings** → BFF base URL → **Save URL** → **Test connection**.
+3. **Docker** environment; Render injects **`PORT`**.
+4. Choose **one** layout (both work):
+   - **A:** **Root Directory** `cbsvault_api`, **Dockerfile Path** `Dockerfile` (build context = this folder).
+   - **B (recommended if Root Directory misbehaves):** **Root Directory** *empty*, **Dockerfile Path** `Dockerfile.render` (repo root; copies from `cbsvault_api/`).
+5. Optional: **Health Check Path** **`/health`**.
+6. After deploy, copy the service URL into the Flutter app **Settings** → BFF base URL → **Save URL** → **Test connection**.
 
 ## Routes
 

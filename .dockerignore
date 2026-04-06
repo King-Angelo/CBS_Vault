@@ -1,0 +1,14 @@
+# Used when building with repo root as context (e.g. Dockerfile.render on Render).
+.git
+.dart_tool
+**/build
+android
+ios
+linux
+macos
+windows
+web
+lib
+/test
+coverage
+.metadata
